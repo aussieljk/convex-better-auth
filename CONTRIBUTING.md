@@ -1,41 +1,30 @@
 # Developing guide
 
+This repo uses Bun workspaces. The root package is the library. The examples,
+`e2e` and `docs` are workspaces that link to it.
+
 ## Running locally
 
 ```sh
-npm i
-cd example
-npm i
-npx convex dev
+bun install
+bun run build
+cd examples/react
+bunx convex dev
 ```
 
 ## Testing
 
 ```sh
-rm -rf dist/ && npm run build
-npm run typecheck
-npm run test
-cd example
-npm run lint
-cd ..
+rm -rf dist/ && bun run build
+bun run test
+bun run typecheck
+bun run lint
+bun run test:e2e
 ```
 
-## Deploying
-
-### Building a one-off package
+## Building a one-off package
 
 ```sh
-rm -rf dist/ && npm run build
-npm pack
-```
-
-### Deploying a new version
-
-```sh
-# this will change the version and commit it (if you run it in the root directory)
-npm version patch
-npm publish --dry-run
-# sanity check files being included
-npm publish
-git push --tags
+rm -rf dist/ && bun run build
+bun pm pack
 ```

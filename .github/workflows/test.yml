@@ -22,35 +22,23 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Node setup
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          cache-dependency-path: package.json
-          node-version: "24.x"
-          cache: "npm"
+      - name: Bun setup
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
       - name: Install and build
         run: |
-          npm i --min-release-age=0
-          npm run build
-      - name: Install example dependencies
-        run: |
-          cd examples/next && npm i &
-          cd examples/react && npm i &
-          cd examples/tanstack && npm i &
-          wait
+          bun install --frozen-lockfile
+          bun run build
       - name: Publish package for testing branch
         run:
-          npx pkg-pr-new publish || echo "Have you set up pkg-pr-new for this
+          bunx pkg-pr-new publish || echo "Have you set up pkg-pr-new for this
           repo?"
       - name: Test
         run: |
-          npm run test
-          npm run typecheck
-          npm run lint
-      - name: Install e2e dependencies
-        run: cd e2e && npm i
+          bun run test
+          bun run typecheck
+          bun run lint
       - name: Install Playwright browsers
-        run: cd e2e && npx playwright install --with-deps chromium
+        run: cd e2e && bunx playwright install --with-deps chromium
       - name: Run e2e tests
-        run: cd e2e && npm run test
+        run: cd e2e && bun run test

@@ -14,7 +14,7 @@ import type { SetOptional } from "type-fest";
 import type defaultSchema from "../component/schema.js";
 import type { Where } from "better-auth/types";
 import { asyncMap } from "convex-helpers";
-import { prop, sortBy } from "remeda";
+import { omit, prop, sortBy } from "remeda";
 import { isRunMutationCtx } from "../utils/index.js";
 import type { Doc, TableNames } from "../component/_generated/dataModel.js";
 import type { ComponentApi } from "../component/_generated/component.js";
@@ -84,8 +84,7 @@ const handlePagination = async (
     // A page that returns nothing and doesn't advance the cursor while !isDone
     // can never terminate; fail loudly instead of looping forever.
     const advanced = state.cursor !== cursorBeforePage;
-    const produced =
-      (result.page?.length ?? 0) > 0 || (result.count ?? 0) > 0;
+    const produced = (result.page?.length ?? 0) > 0 || (result.count ?? 0) > 0;
     if (!state.isDone && !advanced && !produced) {
       throw new Error(
         "handlePagination made no forward progress; aborting to avoid an infinite pagination loop"
@@ -247,15 +246,13 @@ export const convexAdapter = <
         where: (Where & { join?: undefined })[];
       }) => {
         const results = await asyncMap(data.where, async (w) =>
-          handlePagination(
-            async ({ paginationOpts }) => {
-              return await ctx.runQuery(api.adapter.findMany, {
-                model: data.model as TableNames,
-                where: parseWhere(w),
-                paginationOpts,
-              });
-            }
-          )
+          handlePagination(async ({ paginationOpts }) => {
+            return await ctx.runQuery(api.adapter.findMany, {
+              model: data.model as TableNames,
+              where: parseWhere(w),
+              paginationOpts,
+            });
+          })
         );
         const ids = dedupeDocsById(results.flatMap((r) => r.docs))
           .map((doc) => getDocId(doc))
@@ -292,7 +289,7 @@ export const convexAdapter = <
           if (data.where?.every((w) => w.connector === "OR")) {
             for (const w of data.where) {
               const result = await ctx.runQuery(api.adapter.findOne, {
-                ...data,
+                ...omit(data, ["modelKey"]),
                 model: data.model as TableNames,
                 where: parseWhere(w),
               });
@@ -302,7 +299,7 @@ export const convexAdapter = <
             }
           }
           return await ctx.runQuery(api.adapter.findOne, {
-            ...data,
+            ...omit(data, ["modelKey"]),
             model: data.model as TableNames,
             where: parseWhere(data.where),
           });
@@ -315,7 +312,11 @@ export const convexAdapter = <
           if (data.where?.some((w) => w.connector === "OR")) {
             // Always fetch full docs for OR unions so we can dedupe
             // by id and sort/limit before trimming selected fields.
-            const { select: _ignoredSelect, ...queryData } = data;
+            const {
+              select: _ignoredSelect,
+              modelKey: _modelKey,
+              ...queryData
+            } = data;
             const results = await asyncMap(data.where, async (w) =>
               handlePagination(
                 async ({ paginationOpts }) => {
@@ -345,7 +346,7 @@ export const convexAdapter = <
           const result = await handlePagination(
             async ({ paginationOpts }) => {
               return await ctx.runQuery(api.adapter.findMany, {
-                ...data,
+                ...omit(data, ["modelKey"]),
                 model: data.model as TableNames,
                 where: parseWhere(data.where),
                 paginationOpts,
@@ -361,7 +362,7 @@ export const convexAdapter = <
             const results = await asyncMap(data.where, async (w) =>
               handlePagination(async ({ paginationOpts }) => {
                 return await ctx.runQuery(api.adapter.findMany, {
-                  ...data,
+                  ...omit(data, ["modelKey"]),
                   model: data.model as TableNames,
                   where: parseWhere(w),
                   paginationOpts,
@@ -374,7 +375,7 @@ export const convexAdapter = <
 
           const result = await handlePagination(async ({ paginationOpts }) => {
             return await ctx.runQuery(api.adapter.findMany, {
-              ...data,
+              ...omit(data, ["modelKey"]),
               model: data.model as TableNames,
               where: parseWhere(data.where),
               paginationOpts,
@@ -459,7 +460,7 @@ export const convexAdapter = <
           const result = await handlePagination(async ({ paginationOpts }) => {
             return await ctx.runMutation(api.adapter.deleteMany, {
               input: {
-                ...data,
+                ...omit(data, ["modelKey"]),
                 model: data.model as TableNames,
                 where: parseWhere(data.where),
               },
@@ -507,7 +508,7 @@ export const convexAdapter = <
           const result = await handlePagination(async ({ paginationOpts }) => {
             return await ctx.runMutation(api.adapter.updateMany, {
               input: {
-                ...data,
+                ...omit(data, ["modelKey"]),
                 model: data.model as TableNames,
                 where: parseWhere(data.where),
               },
