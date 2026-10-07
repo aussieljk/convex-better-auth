@@ -1,7 +1,10 @@
 {
   "name": "@aussieljk/convex-better-auth",
   "description": "A Better Auth component for Convex. Community fork of @convex-dev/better-auth.",
-  "repository": "github:aussieljk/convex-better-auth",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aussieljk/convex-better-auth.git"
+  },
   "homepage": "https://github.com/aussieljk/convex-better-auth#readme",
   "bugs": {
     "url": "https://github.com/aussieljk/convex-better-auth/issues"
@@ -22,17 +25,18 @@
     "build": "tsc --project tsconfig.build.json",
     "build:codegen": "cd examples/react && bunx convex codegen --component-dir ../../src/component && cd ../.. && bun run build",
     "build:clean": "rm -rf dist *.tsbuildinfo && bun run build:codegen",
-    "typecheck": "tsc --noEmit && tsc -p examples/next && tsc -p examples/next/convex && tsc -p examples/react && tsc -p examples/react/convex && tsc -p examples/tanstack && tsc -p examples/tanstack/convex",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.scripts.json && tsc -p examples/next && tsc -p examples/next/convex && tsc -p examples/react && tsc -p examples/react/convex && tsc -p examples/tanstack && tsc -p examples/tanstack/convex",
     "lint": "eslint .",
     "test": "vitest run --typecheck",
     "test:watch": "vitest --typecheck --clearScreen false",
     "test:debug": "vitest --inspect-brk --no-file-parallelism",
     "test:e2e": "bun run build && cd e2e && bun run test",
     "test:coverage": "vitest run --coverage --coverage.reporter=text",
-    "preversion": "bun install --frozen-lockfile && bun run build:clean && bun run test && bun run lint && bun run typecheck",
-    "alpha": "npm version prerelease --preid alpha && npm publish --tag alpha && git push --follow-tags",
-    "release": "npm version patch && npm publish && git push --follow-tags",
-    "version": "(npm whoami || npm login) && node scripts/sync-version.mjs && vim -c 'normal o' -c 'normal o## '$npm_package_version CHANGELOG.md && prettier -w CHANGELOG.md && git add CHANGELOG.md src/version.ts"
+    "check": "bun run workflows:check && bun run build && bun run test && bun run typecheck && bun run lint",
+    "workflows": "bun ci/generate.ts",
+    "workflows:check": "bun ci/generate.ts --check",
+    "prepublishOnly": "bun run build",
+    "release": "bun scripts/release.ts"
   },
   "files": [
     "dist",
@@ -113,6 +117,7 @@
     "@eslint/eslintrc": "3.3.7",
     "@eslint/js": "10.0.1",
     "@tanstack/react-start": "1.168.60",
+    "@types/bun": "1.4.2",
     "@types/common-tags": "1.8.4",
     "@types/node": "26.6.4",
     "@types/react": "19.3.0",
@@ -156,5 +161,6 @@
   ],
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "packageManager": "bun@1.4.2"
 }

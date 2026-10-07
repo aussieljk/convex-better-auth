@@ -1,0 +1,59 @@
+# GENERATED FILE. DO NOT EDIT.
+# Source: ci/workflows.ts. Run `bun run workflows` to regenerate.
+# CI fails if this file is different from the source (`bun run workflows:check`).
+
+name: Release
+"on":
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    {}
+concurrency:
+  group: release
+  cancel-in-progress: false
+permissions:
+  contents: write
+  id-token: write
+jobs:
+  release:
+    name: Check + publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: "github.ref == 'refs/heads/main'"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: true
+          fetch-depth: 100
+      - name: Setup bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.4.2
+      - name: Setup node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: "24"
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Workflows in sync
+        run: bun run workflows:check
+      - name: Build
+        run: bun run build
+      - name: Test
+        run: bun run test
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Lint
+        run: bun run lint
+      - name: Install Playwright
+        run: cd e2e && bunx playwright install --with-deps chromium
+      - name: E2E tests
+        run: cd e2e && bun run test
+      - name: Publish to npm
+        run: bun scripts/release.ts --if-changed
+        if: "github.event_name == 'push'"
+      - name: Publish to npm (manual)
+        run: bun scripts/release.ts
+        if: "github.event_name == 'workflow_dispatch'"
