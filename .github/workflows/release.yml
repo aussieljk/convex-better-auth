@@ -54,6 +54,10 @@ jobs:
       - name: Publish to npm
         run: bun scripts/release.ts --if-changed
         if: "github.event_name == 'push'"
+        env:
+          NPM_TOKEN: "${{ secrets.NPM_TOKEN }}"
       - name: Publish to npm (manual)
         run: bun scripts/release.ts
         if: "github.event_name == 'workflow_dispatch'"
+        env:
+          NPM_TOKEN: "${{ secrets.NPM_TOKEN }}"
