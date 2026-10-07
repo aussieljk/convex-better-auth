@@ -5,7 +5,7 @@ description: Install and configure Convex + Better Auth for React.
 
 <Callout>
   Check out a complete Convex + Better Auth example with React in the [GitHub
-  repo](https://github.com/get-convex/better-auth/tree/main/examples/react).
+  repo](https://github.com/aussieljk/convex-better-auth/tree/main/examples/react).
 </Callout>
 
 ## Installation
@@ -21,7 +21,7 @@ description: Install and configure Convex + Better Auth for React.
     <Callout>This component requires Convex `1.25.0` or later.</Callout>
 
     ```npm
-    npm install convex@latest @convex-dev/better-auth
+    npm install convex@latest @aussieljk/convex-better-auth
     npm install better-auth@~1.7.5
     ```
 
@@ -34,7 +34,7 @@ description: Install and configure Convex + Better Auth for React.
 
     ```ts title="convex/convex.config.ts"
     import { defineApp } from "convex/server";
-    import betterAuth from "@convex-dev/better-auth/convex.config";
+    import betterAuth from "@aussieljk/convex-better-auth/convex.config";
 
     const app = defineApp();
     app.use(betterAuth);
@@ -50,7 +50,7 @@ description: Install and configure Convex + Better Auth for React.
     Add a `convex/auth.config.ts` file to configure Better Auth as an authentication provider.
 
     ```ts title="convex/auth.config.ts"
-    import { getAuthConfigProvider } from "@convex-dev/better-auth/auth-config";
+    import { getAuthConfigProvider } from "@aussieljk/convex-better-auth/auth-config";
     import type { AuthConfig } from "convex/server";
 
     export default {
@@ -114,8 +114,8 @@ description: Install and configure Convex + Better Auth for React.
     <Callout>Some Typescript errors will show until you save the file.</Callout>
 
     ```ts title="convex/auth.ts"
-    import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-    import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
+    import { createClient, type GenericCtx } from "@aussieljk/convex-better-auth";
+    import { convex, crossDomain } from "@aussieljk/convex-better-auth/plugins";
     import { components } from "./_generated/api";
     import { DataModel } from "./_generated/dataModel";
     import { query } from "./_generated/server";
@@ -169,7 +169,7 @@ description: Install and configure Convex + Better Auth for React.
     import {
       convexClient,
       crossDomainClient,
-    } from "@convex-dev/better-auth/client/plugins";
+    } from "@aussieljk/convex-better-auth/client/plugins";
 
     export const authClient = createAuthClient({
       baseURL: import.meta.env.VITE_CONVEX_SITE_URL,
@@ -209,7 +209,7 @@ description: Install and configure Convex + Better Auth for React.
     import App from "./App";
     import "./index.css";
     import { ConvexReactClient } from "convex/react";
-    import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react"; // [!code ++]
+    import { ConvexBetterAuthProvider } from "@aussieljk/convex-better-auth/react"; // [!code ++]
     import { authClient } from "@/lib/auth-client"; // [!code ++]
 
     const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string, {

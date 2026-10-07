@@ -42,7 +42,7 @@ Configure `jwtCache` in server utilities.
   <Tab value="next-js">
 
 ```ts title="lib/auth-server.ts"
-import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
+import { convexBetterAuthNextJs } from "@aussieljk/convex-better-auth/nextjs";
 import { isAuthError } from "@/lib/utils";
 
 export const { fetchAuthQuery } = convexBetterAuthNextJs({
@@ -60,7 +60,7 @@ export const { fetchAuthQuery } = convexBetterAuthNextJs({
   <Tab value="tanstack-start">
 
 ```ts title="lib/auth-server.ts"
-import { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
+import { convexBetterAuthReactStart } from "@aussieljk/convex-better-auth/react-start";
 import { isAuthError } from "@/lib/utils";
 
 export const { fetchAuthQuery } = convexBetterAuthReactStart({
@@ -177,7 +177,7 @@ Add a client component to wrap and configure `AuthBoundary`.
 "use client";
 
 import { useRouter } from "next/navigation";
-import { AuthBoundary } from "@convex-dev/better-auth/react";
+import { AuthBoundary } from "@aussieljk/convex-better-auth/react";
 import { api } from "@/convex/_generated/api";
 import { isAuthError } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";
@@ -203,7 +203,7 @@ export const ClientAuthBoundary = ({ children }: PropsWithChildren) => {
 "use client";
 
 import { useNavigate } from "@tanstack/react-router";
-import { AuthBoundary } from "@convex-dev/better-auth/react";
+import { AuthBoundary } from "@aussieljk/convex-better-auth/react";
 import { api } from "@/convex/_generated/api";
 import { isAuthError } from "@/lib/utils";
 import { authClient } from "@/lib/auth-client";

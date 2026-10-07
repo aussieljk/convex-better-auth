@@ -15,7 +15,7 @@
     "format": "prettier --write '**/*' --ignore-unknown"
   },
   "dependencies": {
-    "@convex-dev/better-auth": "file:../..",
+    "@aussieljk/convex-better-auth": "file:../..",
     "@convex-dev/react-query": "0.1.0",
     "@convex-dev/resend": "^0.2.8",
     "@radix-ui/react-checkbox": "^1.3.12",

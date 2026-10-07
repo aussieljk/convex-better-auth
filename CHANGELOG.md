@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 0.13.0
 
+- first release as `@aussieljk/convex-better-auth`, a community fork of
+  `@convex-dev/better-auth`
 - feat!: update to better-auth 1.7.5, minimum 1.7.5 (see the
   [0.13 migration guide](./docs/content/docs/migrations/migrate-to-0-13.mdx))
 - fix relative `--output` path in generated schema header

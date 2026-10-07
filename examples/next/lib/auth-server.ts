@@ -1,5 +1,5 @@
 import { isAuthError } from "@/lib/utils";
-import { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
+import { convexBetterAuthNextJs } from "@aussieljk/convex-better-auth/nextjs";
 
 export const {
   handler,

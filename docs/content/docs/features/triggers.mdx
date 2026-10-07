@@ -29,8 +29,8 @@ Throwing an error in a trigger will stop the original operation from committing.
 import { DataModel } from "./_generated/dataModel";
 import { components } from "./_generated/api"; // [!code --]
 import { components, internal } from "./_generated/api"; // [!code ++]
-import { createClient } from "@convex-dev/better-auth"; // [!code --]
-import { createClient, type AuthFunctions } from "@convex-dev/better-auth"; // [!code ++]
+import { createClient } from "@aussieljk/convex-better-auth"; // [!code --]
+import { createClient, type AuthFunctions } from "@aussieljk/convex-better-auth"; // [!code ++]
 
 const authFunctions: AuthFunctions = internal.auth; // [!code ++]
 

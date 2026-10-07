@@ -109,7 +109,7 @@ installed component.
     Export adapter functions for the component.
 
     ```ts title="convex/betterAuth/adapter.ts"
-    import { createApi } from "@convex-dev/better-auth";
+    import { createApi } from "@aussieljk/convex-better-auth";
     import schema from "./schema";
     import { createAuthOptions } from "../auth";
 
@@ -134,7 +134,7 @@ installed component.
 
     ```ts title="convex/convex.config.ts"
     import { defineApp } from "convex/server";
-    import betterAuth from "@convex-dev/better-auth/convex.config"; // [!code --]
+    import betterAuth from "@aussieljk/convex-better-auth/convex.config"; // [!code --]
     import betterAuth from "./betterAuth/convex.config"; // [!code ++]
 
     const app = defineApp();

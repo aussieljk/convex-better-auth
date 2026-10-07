@@ -98,7 +98,7 @@ npm install convex @mmailaender/convex-svelte
     <Callout>This component requires Convex `1.25.0` or later.</Callout>
 
     ```npm
-    npm install @convex-dev/better-auth @mmailaender/convex-better-auth-svelte
+    npm install @aussieljk/convex-better-auth @mmailaender/convex-better-auth-svelte
     npm install better-auth@~1.7.5
     ```
 
@@ -111,7 +111,7 @@ npm install convex @mmailaender/convex-svelte
 
     ```ts title="src/convex/convex.config.ts"
     import { defineApp } from "convex/server";
-    import betterAuth from "@convex-dev/better-auth/convex.config";
+    import betterAuth from "@aussieljk/convex-better-auth/convex.config";
 
     const app = defineApp();
     app.use(betterAuth);
@@ -127,7 +127,7 @@ npm install convex @mmailaender/convex-svelte
     Add a `src/convex/auth.config.ts` file to configure Better Auth as an authentication provider.
 
     ```ts title="src/convex/auth.config.ts"
-    import { getAuthConfigProvider } from "@convex-dev/better-auth/auth-config";
+    import { getAuthConfigProvider } from "@aussieljk/convex-better-auth/auth-config";
     import type { AuthConfig } from "convex/server";
 
     export default {
@@ -191,8 +191,8 @@ npm install convex @mmailaender/convex-svelte
     <Callout>Some Typescript errors will show until you save the file.</Callout>
 
     ```ts title="src/convex/auth.ts"
-    import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-    import { convex } from "@convex-dev/better-auth/plugins";
+    import { createClient, type GenericCtx } from "@aussieljk/convex-better-auth";
+    import { convex } from "@aussieljk/convex-better-auth/plugins";
     import { components } from "./_generated/api";
     import { type DataModel } from "./_generated/dataModel";
     import { query } from "./_generated/server";
@@ -240,7 +240,7 @@ npm install convex @mmailaender/convex-svelte
 
     ```ts title="src/lib/auth-client.ts"
     import { createAuthClient } from 'better-auth/svelte';
-    import { convexClient } from "@convex-dev/better-auth/client/plugins";
+    import { convexClient } from "@aussieljk/convex-better-auth/client/plugins";
 
     export const authClient = createAuthClient({
       plugins: [convexClient()],

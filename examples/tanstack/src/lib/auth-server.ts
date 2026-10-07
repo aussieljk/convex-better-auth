@@ -1,4 +1,4 @@
-import { convexBetterAuthReactStart } from '@convex-dev/better-auth/react-start'
+import { convexBetterAuthReactStart } from '@aussieljk/convex-better-auth/react-start'
 
 export const {
   handler,
