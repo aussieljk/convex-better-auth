@@ -1,41 +1,56 @@
 # Developing guide
 
+This repo uses Bun workspaces. The root package is the library. The examples,
+`e2e` and `docs` are workspaces that link to it.
+
 ## Running locally
 
 ```sh
-npm i
-cd example
-npm i
-npx convex dev
+bun install
+bun run build
+cd examples/react
+bunx convex dev
 ```
 
 ## Testing
 
 ```sh
-rm -rf dist/ && npm run build
-npm run typecheck
-npm run test
-cd example
-npm run lint
-cd ..
+rm -rf dist/ && bun run build
+bun run test
+bun run typecheck
+bun run lint
+bun run test:e2e
 ```
 
-## Deploying
-
-### Building a one-off package
+## Building a one-off package
 
 ```sh
-rm -rf dist/ && npm run build
-npm pack
+rm -rf dist/ && bun run build
+bun pm pack
 ```
 
-### Deploying a new version
+## Releasing
+
+A push to `main` publishes to npm. The Release workflow (`release.yml`) runs the
+full check, then `scripts/release.ts --if-changed`:
+
+- If the push did not change `src/` or `package.json`, it does not publish.
+- If npm already has the version in `package.json`, it bumps the patch version,
+  publishes, and pushes a `chore: release x.y.z` commit and a `vx.y.z` tag.
+- If npm does not have that version yet, it publishes that version. To release a
+  new minor version, set it in `package.json` and push.
+
+You can also start a release from Actions > Release > Run workflow.
+
+The workflow publishes with npm trusted publishing (OIDC). There is no npm
+token. Do not rename `release.yml`, because npmjs.com uses that filename.
+
+## CI workflows
+
+The workflows are written in TypeScript in `ci/workflows.ts`. Do not edit
+`.github/workflows/*.yml` by hand.
 
 ```sh
-# this will change the version and commit it (if you run it in the root directory)
-npm version patch
-npm publish --dry-run
-# sanity check files being included
-npm publish
-git push --tags
+bun run workflows        # write the YAML
+bun run workflows:check  # fail if the YAML is out of date
 ```

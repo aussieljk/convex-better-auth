@@ -2,7 +2,7 @@
 
 import { api } from "@/convex/_generated/api";
 import { Preloaded, useConvex, useMutation } from "convex/react";
-import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
+import { usePreloadedAuthQuery } from "@aussieljk/convex-better-auth/nextjs/client";
 import { useToggleCompleted, useRemoveTodo } from "./mutations";
 import { TodoItem } from "./todo-item";
 import { TodoForm } from "./todo-form";

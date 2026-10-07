@@ -1,5 +1,16 @@
 # Convex + Better Auth
 
+> This package is a community fork of
+> [`@convex-dev/better-auth`](https://github.com/get-convex/better-auth). It
+> supports the latest Better Auth release. To use it, install
+> `@aussieljk/convex-better-auth` and import from
+> `@aussieljk/convex-better-auth` in place of `@convex-dev/better-auth`. All of
+> the APIs are the same.
+>
+> ```sh
+> bun add @aussieljk/convex-better-auth better-auth convex
+> ```
+
 <!-- START: Include on https://convex.dev/components -->
 
 Use [Better Auth](https://better-auth.com) with

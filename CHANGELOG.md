@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.13.0
+
+- first release as `@aussieljk/convex-better-auth`, a community fork of
+  `@convex-dev/better-auth`
+- feat!: update to better-auth 1.7.5, minimum 1.7.5 (see the
+  [0.13 migration guide](./docs/content/docs/migrations/migrate-to-0-13.mdx))
+- fix relative `--output` path in generated schema header
+- support better-auth 1.7.7: do not send the new `modelKey` adapter field to the
+  component
+- update all dependencies to latest (TypeScript stays on 6.0.3 because
+  typescript-eslint does not support TypeScript 7 yet)
+- use Bun and Bun workspaces for development
+
 ## 0.12.5
 
 - fix unbounded count/findMany pagination looping forever past 200 rows (#394)

@@ -3,19 +3,19 @@ import {
   AuthFunctions,
   createClient,
   GenericCtx,
-} from '@convex-dev/better-auth'
+} from '@aussieljk/convex-better-auth'
 import { anonymous } from 'better-auth/plugins/anonymous'
 import { emailOTP } from 'better-auth/plugins/email-otp'
 import { magicLink } from 'better-auth/plugins/magic-link'
 import { twoFactor } from 'better-auth/plugins/two-factor'
-import { convex } from '@convex-dev/better-auth/plugins'
+import { convex } from '@aussieljk/convex-better-auth/plugins'
 import {
   sendEmailVerification,
   sendMagicLink,
   sendOTPVerification,
   sendResetPassword,
 } from './email'
-import { requireActionCtx } from '@convex-dev/better-auth/utils'
+import { requireActionCtx } from '@aussieljk/convex-better-auth/utils'
 import { components, internal } from './_generated/api'
 import betterAuthSchema from './betterAuth/schema'
 import { internalAction, query, QueryCtx } from './_generated/server'

@@ -23,7 +23,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npx vite --port 5176 --clearScreen false",
+    command: "bunx vite --port 5176 --clearScreen false",
     cwd: path.resolve(import.meta.dirname, "../examples/react"),
     url: "http://localhost:5176",
     reuseExistingServer: false,

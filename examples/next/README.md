@@ -8,34 +8,28 @@ it is not set up for standalone use (but can be adapted).
 ### Running the example
 
 1. Clone or fork the repo
-2. Install root dependencies
+2. Install all dependencies from the root directory. This also installs the examples (Bun workspaces).
 
 ```bash
-npm install
+bun install
 ```
 
-3. Change to one of the example directories and install dependencies
+3. Go to the example directory
 
 ```bash
 cd examples/next
-npm install
 ```
 
 4. If you haven't run this example before, initialize the database
 
 ```bash
-npx convex dev --once
+bunx convex dev --once
 ```
 
 5. Run the example
 
 ```bash
-npm run dev
+bun run dev
 ```
 
-If you're making changes to the component, open a separate terminal
-and run the build watch task
-
-```bash
-npm run build:watch
-```
+`bun run dev` also rebuilds the component when you change files in `src/`.

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut, Settings } from "lucide-react";
 import { Preloaded } from "convex/react";
 import { authClient } from "@/lib/auth-client";
-import { usePreloadedAuthQuery } from "@convex-dev/better-auth/nextjs/client";
+import { usePreloadedAuthQuery } from "@aussieljk/convex-better-auth/nextjs/client";
 
 const UserProfile = ({
   preloadedUserQuery,

@@ -12,7 +12,7 @@ The server plugin is required for Convex + Better Auth integration. Add it to
 your Better Auth plugins array.
 
 ```ts
-import { convex } from "@convex-dev/better-auth/plugins";
+import { convex } from "@aussieljk/convex-better-auth/plugins";
 import authConfig from "./auth.config";
 
 export const createAuth = (ctx: GenericCtx<DataModel>) => {
@@ -36,7 +36,7 @@ The Convex auth config from your project, typically exported from
 
 ```ts
 import { type AuthConfig } from "convex/server";
-import { getAuthConfigProvider } from "@convex-dev/better-auth/auth-config";
+import { getAuthConfigProvider } from "@aussieljk/convex-better-auth/auth-config";
 
 export default {
   providers: [getAuthConfigProvider()],
@@ -127,7 +127,7 @@ configuration options.
 
 ```ts
 import { createAuthClient } from "better-auth/react";
-import { convexClient } from "@convex-dev/better-auth/plugins";
+import { convexClient } from "@aussieljk/convex-better-auth/plugins";
 
 export const authClient = createAuthClient({
   plugins: [convexClient()],

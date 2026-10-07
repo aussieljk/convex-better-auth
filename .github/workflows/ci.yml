@@ -1,0 +1,46 @@
+# GENERATED FILE. DO NOT EDIT.
+# Source: ci/workflows.ts. Run `bun run workflows` to regenerate.
+# CI fails if this file is different from the source (`bun run workflows:check`).
+
+name: CI
+"on":
+  pull_request:
+    branches:
+      - "**"
+concurrency:
+  group: "ci-${{ github.head_ref || github.run_id }}"
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - name: Setup bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.4.2
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Workflows in sync
+        run: bun run workflows:check
+      - name: Build
+        run: bun run build
+      - name: Test
+        run: bun run test
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Lint
+        run: bun run lint
+      - name: Install Playwright
+        run: cd e2e && bunx playwright install --with-deps chromium
+      - name: E2E tests
+        run: cd e2e && bun run test
+      - name: Publish preview package
+        run: "bunx pkg-pr-new publish || echo \"pkg-pr-new is not set up for this repo\""

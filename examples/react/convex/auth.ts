@@ -1,6 +1,6 @@
-import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
-import { requireActionCtx } from "@convex-dev/better-auth/utils";
+import { createClient, type GenericCtx } from "@aussieljk/convex-better-auth";
+import { convex, crossDomain } from "@aussieljk/convex-better-auth/plugins";
+import { requireActionCtx } from "@aussieljk/convex-better-auth/utils";
 import { components } from "./_generated/api";
 import { query } from "./_generated/server";
 import { betterAuth, type BetterAuthOptions } from "better-auth/minimal";
@@ -13,7 +13,7 @@ import {
   sendOTPVerification,
   sendResetPassword,
 } from "./email";
-import authConfig from "convex/auth.config";
+import authConfig from "./auth.config";
 
 const siteUrl = process.env.SITE_URL!;
 

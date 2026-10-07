@@ -6,7 +6,7 @@ description: Install and configure Convex + Better Auth for TanStack Start.
 <Callout>
   Check out a complete Convex + Better Auth example with TanStack Start in the
   [GitHub
-  repo](https://github.com/get-convex/better-auth/tree/main/examples/tanstack).
+  repo](https://github.com/aussieljk/convex-better-auth/tree/main/examples/tanstack).
 </Callout>
 
 ## Installation
@@ -22,8 +22,8 @@ description: Install and configure Convex + Better Auth for TanStack Start.
     <Callout>This component requires Convex `1.25.0` or later.</Callout>
 
     ```npm
-    npm install convex@latest @convex-dev/better-auth
-    npm install better-auth@~1.6.15
+    npm install convex@latest @aussieljk/convex-better-auth
+    npm install better-auth@~1.7.5
     npm install @types/node --save-dev
     ```
 
@@ -32,13 +32,13 @@ description: Install and configure Convex + Better Auth for TanStack Start.
   <div className="fd-step">
     ### Configure Vite for SSR
 
-    Configure Vite to bundle `@convex-dev/better-auth` during SSR to avoid module resolution issues.
+    Configure Vite to bundle `@aussieljk/convex-better-auth` during SSR to avoid module resolution issues.
 
     ```ts title="vite.config.ts"
     export default defineConfig({
       // ...other config
       ssr: {
-        noExternal: ['@convex-dev/better-auth'],
+        noExternal: ['@aussieljk/convex-better-auth'],
       },
     });
     ```
@@ -52,7 +52,7 @@ description: Install and configure Convex + Better Auth for TanStack Start.
 
     ```ts title="convex/convex.config.ts"
     import { defineApp } from "convex/server";
-    import betterAuth from "@convex-dev/better-auth/convex.config";
+    import betterAuth from "@aussieljk/convex-better-auth/convex.config";
 
     const app = defineApp();
     app.use(betterAuth);
@@ -68,7 +68,7 @@ description: Install and configure Convex + Better Auth for TanStack Start.
     Add a `convex/auth.config.ts` file to configure Better Auth as an authentication provider.
 
     ```ts title="convex/auth.config.ts"
-    import { getAuthConfigProvider } from '@convex-dev/better-auth/auth-config'
+    import { getAuthConfigProvider } from '@aussieljk/convex-better-auth/auth-config'
     import type { AuthConfig } from 'convex/server'
 
     export default {
@@ -133,12 +133,12 @@ description: Install and configure Convex + Better Auth for TanStack Start.
 
     ```ts title="convex/auth.ts"
     import { betterAuth } from 'better-auth/minimal'
-    import { createClient } from '@convex-dev/better-auth'
-    import { convex } from '@convex-dev/better-auth/plugins'
+    import { createClient } from '@aussieljk/convex-better-auth'
+    import { convex } from '@aussieljk/convex-better-auth/plugins'
     import authConfig from './auth.config'
     import { components } from './_generated/api'
     import { query } from './_generated/server'
-    import type { GenericCtx } from '@convex-dev/better-auth'
+    import type { GenericCtx } from '@aussieljk/convex-better-auth'
     import type { DataModel } from './_generated/dataModel'
 
     const siteUrl = process.env.SITE_URL!
@@ -182,7 +182,7 @@ description: Install and configure Convex + Better Auth for TanStack Start.
 
     ```ts title="src/lib/auth-client.ts"
     import { createAuthClient } from 'better-auth/react'
-    import { convexClient } from '@convex-dev/better-auth/client/plugins'
+    import { convexClient } from '@aussieljk/convex-better-auth/client/plugins'
 
     export const authClient = createAuthClient({
       plugins: [convexClient()],
@@ -197,7 +197,7 @@ description: Install and configure Convex + Better Auth for TanStack Start.
     Configure a set of helper functions for authenticated SSR, server functions, and route handlers.
 
     ```ts title="src/lib/auth-server.ts"
-    import { convexBetterAuthReactStart } from '@convex-dev/better-auth/react-start'
+    import { convexBetterAuthReactStart } from '@aussieljk/convex-better-auth/react-start'
 
     export const {
       handler,
@@ -266,7 +266,7 @@ description: Install and configure Convex + Better Auth for TanStack Start.
     import * as React from 'react'
     // [!code ++:3]
     import { createServerFn } from '@tanstack/react-start'
-    import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+    import { ConvexBetterAuthProvider } from '@aussieljk/convex-better-auth/react'
     import type { ConvexQueryClient } from '@convex-dev/react-query'
     import type { QueryClient } from '@tanstack/react-query'
     import appCss from '~/styles/app.css?url'
