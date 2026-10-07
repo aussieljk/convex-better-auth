@@ -212,6 +212,7 @@ if (bootstrapToken && repo) {
       "release.yml",
       "--repo",
       repo,
+      "--allow-publish",
       "--yes",
     ],
     { env: npmEnv, optional: true }
