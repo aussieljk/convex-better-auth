@@ -65,6 +65,7 @@ function run(
   const { exitCode } = Bun.spawnSync(cmd, {
     cwd: ROOT,
     env: { ...process.env, ...opts.env },
+    stdin: "inherit",
     stdout: "inherit",
     stderr: "inherit",
   });
