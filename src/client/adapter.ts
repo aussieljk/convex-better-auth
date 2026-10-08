@@ -183,7 +183,9 @@ export const convexAdapter = <
 >(
   ctx: Ctx,
   api: {
-    adapter: ComponentApi["adapter"];
+    // An app with a local install can leave deleteUserData out of its
+    // adapter exports. The adapter does not use it.
+    adapter: Omit<ComponentApi["adapter"], "deleteUserData">;
   },
   config: {
     debugLogs?: DBAdapterDebugLogOption;
@@ -429,6 +431,41 @@ export const convexAdapter = <
             },
             onDeleteHandle: onDeleteHandle,
           });
+        },
+        // Better Auth uses consumeOne to read and delete a one-time value (a
+        // magic link, an email code, a reset token). The component deleteOne
+        // mutation finds and deletes the row in one transaction, and returns
+        // the row only to the call that deleted it. Thus, if two requests use
+        // the same token at the same time, only one of them gets the row.
+        //
+        // Without this method, Better Auth uses its own fallback. That
+        // fallback puts `_creationTime` in the where clause, which the
+        // component validator refuses.
+        //
+        // The factory runs a transaction on its own adapter, which includes
+        // this method, so `transaction: false` above needs no override.
+        consumeOne: async (data): Promise<any> => {
+          if (!("runMutation" in ctx)) {
+            throw new Error("ctx is not a mutation ctx");
+          }
+          if (data.where.some((w) => w.connector === "OR")) {
+            throw new Error("OR where clauses are not supported by consumeOne");
+          }
+          const onDeleteHandle =
+            config.authFunctions?.onDelete &&
+            config.triggers?.[data.model]?.onDelete
+              ? ((await createFunctionHandle(
+                  config.authFunctions.onDelete
+                )) as FunctionHandle<"mutation">)
+              : undefined;
+          const deleted = await ctx.runMutation(api.adapter.deleteOne, {
+            input: {
+              model: data.model as TableNames,
+              where: parseWhere(data.where),
+            },
+            onDeleteHandle: onDeleteHandle,
+          });
+          return deleted ?? null;
         },
         deleteMany: async (data) => {
           if (!("runMutation" in ctx)) {

@@ -1,5 +1,12 @@
 import type { PropsWithChildren, ReactNode } from "react";
-import { Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { AuthTokenFetcher } from "convex/browser";
 import {
   Authenticated,
@@ -14,6 +21,7 @@ import type {
   crossDomainClient,
 } from "../client/plugins/index.js";
 import type { EmptyObject } from "convex-helpers";
+import { tradeOneTimeToken } from "./one-time-token.js";
 
 type CrossDomainClient = ReturnType<typeof crossDomainClient>;
 type ConvexClient = ReturnType<typeof convexClient>;
@@ -37,6 +45,17 @@ type IConvexReactClient = {
  * A wrapper React component which provides a {@link react.ConvexReactClient}
  * authenticated with Better Auth.
  *
+ * When the page URL has `?ott=` (a one-time token from OAuth or a magic link
+ * with the cross domain plugin), the provider removes it from the URL and
+ * trades it for a session.
+ *
+ * @param props.verifyOneTimeToken - Optional. The provider trades an ott only
+ * when this function returns true. Use it with `createSignInNonce` from
+ * `@aussieljk/convex-better-auth/client/plugins`, so that the provider trades
+ * only an ott that this browser asked for: `verifyOneTimeToken={signInNonce.verify}`.
+ * Without it, the provider trades every ott, and a link with an ott for
+ * another account can sign the browser in to that account.
+ *
  * @public
  */
 export function ConvexBetterAuthProvider({
@@ -44,42 +63,32 @@ export function ConvexBetterAuthProvider({
   client,
   authClient,
   initialToken,
+  verifyOneTimeToken,
 }: {
   children: ReactNode;
   client: IConvexReactClient;
   authClient: AuthClient;
   initialToken?: string | null;
+  verifyOneTimeToken?: (
+    url: string,
+    token: string
+  ) => boolean | Promise<boolean>;
 }) {
   const useBetterAuth = useUseAuthFromBetterAuth(authClient, initialToken);
+  const verifyOneTimeTokenRef = useRef(verifyOneTimeToken);
   useEffect(() => {
-    (async () => {
-      if (typeof window === "undefined" || !window.location?.href) {
-        return;
-      }
-      const url = new URL(window.location.href);
-      const token = url.searchParams.get("ott");
-      if (token) {
-        const authClientWithCrossDomain =
-          authClient as AuthClientWithPlugins<PluginsWithCrossDomain>;
-        url.searchParams.delete("ott");
-        window.history.replaceState({}, "", url);
-        const result =
-          await authClientWithCrossDomain.crossDomain.oneTimeToken.verify({
-            token,
-          });
-        const session = result.data?.session;
-        if (session) {
-          await authClient.getSession({
-            fetchOptions: {
-              headers: {
-                Authorization: `Bearer ${session.token}`,
-              },
-            },
-          });
-          authClientWithCrossDomain.updateSession();
-        }
-      }
-    })();
+    verifyOneTimeTokenRef.current = verifyOneTimeToken;
+  }, [verifyOneTimeToken]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.location?.href) {
+      return;
+    }
+    void tradeOneTimeToken({
+      authClient,
+      location: window.location,
+      history: window.history,
+      verifyOneTimeToken: verifyOneTimeTokenRef.current,
+    });
   }, [authClient]);
   return (
     <ConvexProviderWithAuth client={client} useAuth={useBetterAuth}>

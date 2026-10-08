@@ -634,6 +634,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         any,
         Name
       >;
+      deleteUserData: FunctionReference<
+        "mutation",
+        "internal",
+        { limit?: number; onDeleteHandle?: string; userId: string },
+        any,
+        Name
+      >;
       findMany: FunctionReference<
         "query",
         "internal",
