@@ -2,8 +2,11 @@
 
 import { describe, expect, it } from "vitest";
 import { convexTest } from "convex-test";
+import { anyApi, defineSchema, defineTable } from "convex/server";
 import { api } from "../component/_generated/api.js";
+import { options } from "../auth-options.js";
 import schema from "../component/schema.js";
+import { createApi } from "./create-api.js";
 
 const now = Date.now();
 
@@ -122,5 +125,36 @@ describe("deleteUserData", () => {
     expect(
       await t.mutation(api.adapter.deleteUserData, { userId: "not-an-id" })
     ).toEqual({ isDone: true, deleted: 0 });
+  });
+
+  it("names the missing index and deletes nothing", async () => {
+    // The default schema, but the session table has no userId index.
+    const noIndexSchema = defineSchema({
+      ...schema.tables,
+      session: defineTable(schema.tables.session.validator).index("token", [
+        "token",
+      ]),
+    });
+    const t = convexTest(noIndexSchema, {
+      ...import.meta.glob("../component/**/*.*s"),
+      "../component/noIndex.ts": async () =>
+        createApi(noIndexSchema, () => options),
+    });
+    const userId = await t.run((ctx) =>
+      ctx.db.insert("user", {
+        name: "a",
+        email: "a@example.com",
+        emailVerified: true,
+        createdAt: now,
+        updatedAt: now,
+      })
+    );
+
+    await expect(
+      t.mutation(anyApi.noIndex.deleteUserData, { userId })
+    ).rejects.toThrow(
+      'deleteUserData needs an index on session.userId. Add .index("userId", ["userId"])'
+    );
+    expect(await t.run((ctx) => ctx.db.get("user", userId))).not.toBeNull();
   });
 });

@@ -45,9 +45,6 @@ const BUN_VERSION = root.packageManager.replace("bun@", "");
 
 const MAIN = "main";
 
-/** Only for the first publish. See scripts/release.ts. */
-const FIRST_PUBLISH_ENV = { NPM_TOKEN: "${{ secrets.NPM_TOKEN }}" };
-
 /** The gate both workflows run before anything else. */
 const check: Step[] = [
   sh("Workflows in sync", "bun run workflows:check"),
@@ -117,16 +114,14 @@ const release: Workflow = {
         setupNode(NODE_VERSION),
         install(),
         ...check,
-        // Never set NODE_AUTH_TOKEN here. With it, npm uses token auth and skips
-        // trusted publishing. NPM_TOKEN is only for the first publish of the
-        // package, and release.ts refuses to run with it after that.
+        // Never give these steps an npm token (NODE_AUTH_TOKEN or NPM_TOKEN).
+        // With one, npm uses token auth and skips trusted publishing.
+        // release.ts refuses to run if it sees one.
         sh("Publish to npm", "bun scripts/release.ts --if-changed", {
           if: "github.event_name == 'push'",
-          env: { ...FIRST_PUBLISH_ENV },
         }),
         sh("Publish to npm (manual)", "bun scripts/release.ts", {
           if: "github.event_name == 'workflow_dispatch'",
-          env: { ...FIRST_PUBLISH_ENV },
         }),
       ],
     },

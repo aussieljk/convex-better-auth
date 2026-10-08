@@ -38,6 +38,19 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) =>
 Then remove the imports that only the wrapper used (for example `FunctionArgs`
 and the `AuthModel` type).
 
+### 1b. Atomic `incrementOne` in the adapter (0.14.1)
+
+Better Auth uses `incrementOne` for counters: two factor attempts, backup
+codes, the organization plugin, device authorization and the database rate
+limiter. The adapter now calls the component `incrementOne` mutation, which
+finds the row, checks the where clause and writes the new values in one
+transaction. No increment is lost when requests run at the same time.
+
+**Migration.** Nothing for the default install. For a local install, add
+`incrementOne` to the exports of `convex/betterAuth/adapter.ts` (see below).
+Without it, the adapter uses the Better Auth fallback, which can throw a
+contention error under load.
+
 ### 2. `deleteUserData` for the delete-account path
 
 The component has a `deleteUserData` mutation. It deletes the user and the rows
@@ -49,10 +62,15 @@ the result is `{ isDone: false }`, call it again.
 It is a component function, so only your app can call it. Your app must make
 sure that the caller is the user.
 
+Each of these tables needs an index that starts with its `userId` field. The
+generated schema has one, named `userId`. If an index is missing,
+`deleteUserData` deletes nothing and throws an error that names the table and
+the index to add.
+
 **Migration.**
 
-1. For a local install, add `deleteUserData` to the exports of
-   `convex/betterAuth/adapter.ts`:
+1. For a local install, add `deleteUserData` (and `incrementOne`, from 0.14.1)
+   to the exports of `convex/betterAuth/adapter.ts`:
 
    ```ts
    export const {
@@ -61,6 +79,7 @@ sure that the caller is the user.
      findMany,
      updateOne,
      updateMany,
+     incrementOne,
      deleteOne,
      deleteMany,
      deleteUserData,

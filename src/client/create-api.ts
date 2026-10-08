@@ -292,6 +292,71 @@ export const createApi = <Schema extends SchemaDefinition<any, any>>(
         };
       },
     }),
+    /**
+     * Finds one row and adds a number to some of its fields (`increment`),
+     * and sets other fields (`set`), in one transaction. The where clause
+     * selects the row and is also the guard: if no row matches, nothing
+     * changes and the result is null. A missing or null counter counts as 0.
+     */
+    incrementOne: mutationGeneric({
+      args: {
+        input: v.union(
+          ...Object.entries(schema.tables).map(
+            ([name, table]: [string, Schema["tables"][string]]) => {
+              const tableName = name as TableNames;
+              return v.object({
+                model: v.literal(tableName),
+                where: v.array(whereValidator(schema, tableName)),
+                increment: v.record(v.string(), v.number()),
+                set: v.optional(v.object(partial(table.validator.fields))),
+              });
+            }
+          )
+        ),
+        onUpdateHandle: v.optional(v.string()),
+      },
+      handler: async (ctx, args) => {
+        const { model, where, increment, set } = args.input;
+        const fields = schema.tables[model].validator.fields;
+        const update: Record<string, unknown> = { ...set };
+        const doc = await listOne(ctx, schema, betterAuthSchema, {
+          model,
+          where,
+        });
+        if (!doc) {
+          return null;
+        }
+        for (const [field, delta] of Object.entries(increment)) {
+          if (!(field in fields)) {
+            throw new Error(`incrementOne: ${model} has no field ${field}`);
+          }
+          const current = (doc as any)[field] ?? 0;
+          if (typeof current !== "number") {
+            throw new Error(`incrementOne: ${model}.${field} is not a number`);
+          }
+          update[field] = current + delta;
+        }
+        await checkUniqueFields(
+          ctx,
+          schema,
+          betterAuthSchema,
+          model,
+          update,
+          doc
+        );
+        const id = doc._id as GenericId<TableNames>;
+        await ctx.db.patch(model, id, update as any);
+        const updatedDoc = await ctx.db.get(model, id);
+        if (args.onUpdateHandle) {
+          await ctx.runMutation(
+            args.onUpdateHandle as FunctionHandle<"mutation">,
+            { model, newDoc: updatedDoc, oldDoc: doc }
+          );
+          return await ctx.db.get(model, id);
+        }
+        return updatedDoc;
+      },
+    }),
     deleteOne: mutationGeneric({
       args: {
         input: v.union(
@@ -378,6 +443,12 @@ export const createApi = <Schema extends SchemaDefinition<any, any>>(
      * One call deletes at most `limit` rows (default 500). The user row is
      * deleted last, only when no other row is left. If the result has
      * `isDone: false`, call it again (for example from the scheduler).
+     *
+     * Each table must have an index that starts with its userId field (the
+     * generated schema has one, named `userId`). If an index is missing, the
+     * mutation deletes nothing and throws an error that names the table.
+     * It does not scan the table, because a scan of a large session table
+     * can go over the Convex read limits and fail only in production.
      */
     deleteUserData: mutationGeneric({
       args: {
@@ -385,7 +456,9 @@ export const createApi = <Schema extends SchemaDefinition<any, any>>(
         limit: v.optional(v.number()),
         onDeleteHandle: v.optional(v.string()),
       },
+      returns: v.object({ isDone: v.boolean(), deleted: v.number() }),
       handler: async (ctx, args) => {
+        const tables = userDataTables(schema, betterAuthSchema);
         const limit = Math.max(1, args.limit ?? DELETE_USER_DATA_LIMIT);
         let deleted = 0;
         const deleteDoc = async (model: string, doc: any) => {
@@ -398,17 +471,11 @@ export const createApi = <Schema extends SchemaDefinition<any, any>>(
             );
           }
         };
-        for (const model of USER_DATA_MODELS) {
-          const table = betterAuthSchema[model];
-          const tableName = table?.modelName ?? model;
-          if (!schema.tables[tableName]) {
-            continue;
-          }
-          const field = table?.fields.userId?.fieldName ?? "userId";
+        for (const { tableName, field, index } of tables) {
           while (deleted < limit) {
             const rows = await ctx.db
               .query(tableName as any)
-              .withIndex(field, (q: any) => q.eq(field, args.userId))
+              .withIndex(index, (q: any) => q.eq(field, args.userId))
               .take(Math.min(DELETE_USER_DATA_BATCH, limit - deleted));
             for (const row of rows) {
               await deleteDoc(tableName, row);
@@ -435,5 +502,33 @@ export const createApi = <Schema extends SchemaDefinition<any, any>>(
 
 /** The Better Auth models with a `userId` field that deleteUserData clears. */
 const USER_DATA_MODELS = ["session", "account", "passkey", "twoFactor"];
+
+/**
+ * The tables that deleteUserData clears, each with its userId field and an
+ * index that starts with that field. A model that is not in the schema is
+ * left out. A table without such an index is an error.
+ */
+const userDataTables = (
+  schema: SchemaDefinition<any, any>,
+  betterAuthSchema: ReturnType<typeof getAuthTables>
+) =>
+  USER_DATA_MODELS.flatMap((model) => {
+    const table = betterAuthSchema[model];
+    const tableName = table?.modelName ?? model;
+    const definition = schema.tables[tableName];
+    if (!definition) {
+      return [];
+    }
+    const field = table?.fields.userId?.fieldName ?? "userId";
+    const index = definition[" indexes"]().find(
+      (i: { fields: string[] }) => i.fields[0] === field
+    )?.indexDescriptor;
+    if (!index) {
+      throw new Error(
+        `deleteUserData needs an index on ${tableName}.${field}. Add .index("${field}", ["${field}"]) to the ${tableName} table in your Better Auth schema.`
+      );
+    }
+    return [{ tableName, field, index }];
+  });
 const DELETE_USER_DATA_LIMIT = 500;
 const DELETE_USER_DATA_BATCH = 100;

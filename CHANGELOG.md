@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.14.1
+
+- fix(adapter): add a native `incrementOne`. The component `incrementOne`
+  mutation finds the row, checks the where clause and writes the new values in
+  one transaction. Better Auth uses `incrementOne` for two factor attempt
+  counts, backup codes, the organization plugin, device authorization and the
+  database rate limiter. Before, Better Auth used its fallback. The fallback
+  reads the row, writes it only if the fields did not change, and tries again
+  at most five times. With many requests at the same time, it threw a
+  contention error. For a local install, add `incrementOne` to the exports of
+  `convex/betterAuth/adapter.ts`. Without it, the adapter uses the fallback as
+  before.
+- fix(component): `deleteUserData` has a `returns` validator, so
+  `ctx.runMutation` gives the type `{ isDone: boolean; deleted: number }`.
+- fix(component): `deleteUserData` uses any index that starts with the userId
+  field. If a table has no such index, it deletes nothing and throws an error
+  that names the table and the index to add. It does not scan the table,
+  because a scan can go over the Convex read limits.
+- ci: the Release workflow publishes only with npm trusted publishing (OIDC).
+  The first publish path with `NPM_TOKEN` is removed. `scripts/release.ts`
+  stops if it sees `NODE_AUTH_TOKEN` or `NPM_TOKEN`.
+
 ## 0.14.0
 
 This release adds security fixes that apps carried as copies. All changes are
