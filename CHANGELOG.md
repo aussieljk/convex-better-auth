@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.14.0
+
+This release adds security fixes that apps carried as copies. All changes are
+backward compatible. The new sign-in nonce gate is opt in. See
+[Security helpers](./README.md#security-helpers) in the README for the migration
+steps.
+
+- fix(adapter): add a native `consumeOne`. It deletes the row and returns it in
+  one component transaction (`deleteOne`), so only one request can use a magic
+  link, an email code or a reset token. Before, Better Auth used its fallback,
+  which put `_creationTime` in the where clause, and the component validator
+  refused it. A `transaction` callback also gets an adapter with `consumeOne`.
+  Remove the `consumeOne` wrapper from `convex/auth.ts`.
+- feat(component): add the `deleteUserData({ userId, limit? })` mutation. It
+  deletes the user and their `session`, `account`, `passkey` and `twoFactor`
+  rows in bounded batches, and skips a table that is not in the schema. For a
+  local install, add `deleteUserData` to the exports of
+  `convex/betterAuth/adapter.ts`.
+- feat(react): add the `verifyOneTimeToken` prop to `ConvexBetterAuthProvider`.
+  When it is set, the provider trades an `?ott=` only when the function returns
+  true. Without the prop, the provider works as before.
+- feat(client): add `createSignInNonce()` to
+  `@aussieljk/convex-better-auth/client/plugins`. It adds a nonce to callback
+  URLs and verifies it before an ott is traded. It works on the web
+  (localStorage) and in React Native (give it a storage, for example
+  expo-secure-store).
+
 ## 0.13.0
 
 - first release as `@aussieljk/convex-better-auth`, a community fork of

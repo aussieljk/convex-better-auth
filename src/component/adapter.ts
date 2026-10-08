@@ -10,4 +10,5 @@ export const {
   updateMany,
   deleteOne,
   deleteMany,
+  deleteUserData,
 } = createApi(schema, () => options);

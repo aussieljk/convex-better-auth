@@ -366,5 +366,74 @@ export const createApi = <Schema extends SchemaDefinition<any, any>>(
         };
       },
     }),
+    /**
+     * Deletes a Better Auth user and the rows that sign them in: sessions,
+     * linked accounts (OAuth and the password hash), passkeys and two factor
+     * secrets. A table that is not in the schema is skipped. Use it in the
+     * delete-account path of your app, after your app deletes its own data.
+     *
+     * This is a component function, so only your app can call it. Your app
+     * must make sure that the caller is the user.
+     *
+     * One call deletes at most `limit` rows (default 500). The user row is
+     * deleted last, only when no other row is left. If the result has
+     * `isDone: false`, call it again (for example from the scheduler).
+     */
+    deleteUserData: mutationGeneric({
+      args: {
+        userId: v.string(),
+        limit: v.optional(v.number()),
+        onDeleteHandle: v.optional(v.string()),
+      },
+      handler: async (ctx, args) => {
+        const limit = Math.max(1, args.limit ?? DELETE_USER_DATA_LIMIT);
+        let deleted = 0;
+        const deleteDoc = async (model: string, doc: any) => {
+          await ctx.db.delete(model as any, doc._id);
+          deleted++;
+          if (args.onDeleteHandle) {
+            await ctx.runMutation(
+              args.onDeleteHandle as FunctionHandle<"mutation">,
+              { model, doc }
+            );
+          }
+        };
+        for (const model of USER_DATA_MODELS) {
+          const table = betterAuthSchema[model];
+          const tableName = table?.modelName ?? model;
+          if (!schema.tables[tableName]) {
+            continue;
+          }
+          const field = table?.fields.userId?.fieldName ?? "userId";
+          while (deleted < limit) {
+            const rows = await ctx.db
+              .query(tableName as any)
+              .withIndex(field, (q: any) => q.eq(field, args.userId))
+              .take(Math.min(DELETE_USER_DATA_BATCH, limit - deleted));
+            for (const row of rows) {
+              await deleteDoc(tableName, row);
+            }
+            if (rows.length === 0) {
+              break;
+            }
+          }
+          if (deleted >= limit) {
+            return { isDone: false, deleted };
+          }
+        }
+        const userTable = betterAuthSchema.user?.modelName ?? "user";
+        const userId = ctx.db.normalizeId(userTable as any, args.userId);
+        const user = userId ? await ctx.db.get(userTable as any, userId) : null;
+        if (user) {
+          await deleteDoc(userTable, user);
+        }
+        return { isDone: true, deleted };
+      },
+    }),
   };
 };
+
+/** The Better Auth models with a `userId` field that deleteUserData clears. */
+const USER_DATA_MODELS = ["session", "account", "passkey", "twoFactor"];
+const DELETE_USER_DATA_LIMIT = 500;
+const DELETE_USER_DATA_BATCH = 100;
