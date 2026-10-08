@@ -45,22 +45,19 @@ You can also start a release from Actions > Release > Run workflow.
 The workflow publishes with npm trusted publishing (OIDC). There is no npm
 token. Do not rename `release.yml`, because npmjs.com uses that filename.
 
-### First publish of a new package
+### Trusted publisher on npmjs.com
 
-OIDC cannot publish a package that is not on npm yet. For the first release
-only:
+The trusted publisher for `@aussieljk/convex-better-auth` is this repo
+(`aussieljk/convex-better-auth`) and the workflow file `release.yml`. To see or
+set it up again, run this with your npm login (it asks for 2FA):
 
-1. On npmjs.com, go to Access Tokens > Generate New Token (granular). Give it
-   read and write access to all packages, and turn on "Bypass two-factor
-   authentication". Set a short expiry, for example 1 day.
-2. In the GitHub repo, go to Settings > Secrets and variables > Actions and add
-   it as `NPM_TOKEN`.
-3. Run Actions > Release > Run workflow.
-4. The workflow publishes and then runs `npm trust github` to set up trusted
-   publishing. If that step fails, the job summary tells you how to set it up on
-   npmjs.com by hand.
-5. Delete the `NPM_TOKEN` secret and the token on npmjs.com. The next release
-   refuses to run while the secret is set.
+```sh
+npm trust list @aussieljk/convex-better-auth
+npm trust github @aussieljk/convex-better-auth --file release.yml --repo aussieljk/convex-better-auth --allow-publish --yes
+```
+
+Do not give the Release workflow an npm token. `scripts/release.ts` stops if it
+sees `NODE_AUTH_TOKEN` or `NPM_TOKEN`.
 
 ## CI workflows
 

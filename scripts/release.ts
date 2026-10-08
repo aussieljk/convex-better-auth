@@ -17,21 +17,15 @@
  *      tag it, and push.
  *
  * There is no npm token. In CI, the `id-token: write` permission mints an OIDC
- * token that npm trades for publish rights, and npm adds provenance. On a laptop
- * it uses your `npm login` session.
- *
- * The one exception is the first publish. npm can only trust a workflow for a
- * package that already exists, so OIDC cannot publish a new package. For that
- * one release, the workflow uses the NPM_TOKEN secret, then runs
- * `npm trust github` to set up trusted publishing. After that, the script
- * refuses to run while NPM_TOKEN is set, so the secret gets deleted.
+ * token that npm trades for publish rights (trusted publishing), and npm adds
+ * provenance. The trusted publisher on npmjs.com names this repo and
+ * `release.yml`. On a laptop it uses your `npm login` session.
  *
  * The push uses GITHUB_TOKEN. GitHub does not start new workflow runs for those
  * pushes. This is important: the release commit changes package.json, so a push
  * that started a workflow would release again, forever.
  */
 import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import semver from "semver";
 
@@ -134,10 +128,12 @@ const dirty = capture(["git", "status", "--porcelain"]);
 if (dirty) fail(`uncommitted changes. Commit or stash first:\n${dirty}`);
 
 if (CI) {
-  if (process.env.NODE_AUTH_TOKEN) {
-    fail(
-      "NODE_AUTH_TOKEN is set. npm would use token auth, not trusted publishing."
-    );
+  for (const token of ["NODE_AUTH_TOKEN", "NPM_TOKEN"]) {
+    if (process.env[token]) {
+      fail(
+        `${token} is set. npm would use token auth, not trusted publishing.`
+      );
+    }
   }
   const npm = capture(["npm", "--version"]) ?? "0.0.0";
   if (semver.lt(npm, MIN_NPM)) {
@@ -155,27 +151,11 @@ if (CI) {
 
 const { name, version: current } = readPkg();
 
-// The first publish of a new package cannot use OIDC (see the top of this file).
-const firstPublish = !capture(["npm", "view", name, "version"]);
-const bootstrapToken = process.env.NPM_TOKEN || undefined;
-if (bootstrapToken && !firstPublish) {
+if (!capture(["npm", "view", name, "version"])) {
   fail(
-    `${name} is on npm, so it publishes with trusted publishing now. ` +
-      "Delete the NPM_TOKEN secret (repo > Settings > Secrets and variables > Actions) and the token on npmjs.com."
+    `${name} is not on npm. Trusted publishing cannot publish a new package. ` +
+      "Publish it once from a laptop, then set up the trusted publisher."
   );
-}
-if (CI && firstPublish && !bootstrapToken) {
-  fail(
-    `${name} is not on npm yet, and OIDC cannot do a first publish. ` +
-      "Add an NPM_TOKEN secret for this one release (see CONTRIBUTING.md)."
-  );
-}
-// npm reads the token from this file, so it never appears in a command line.
-const npmEnv: Record<string, string> = {};
-if (bootstrapToken) {
-  const npmrc = join(tmpdir(), "release.npmrc");
-  writeFileSync(npmrc, `//registry.npmjs.org/:_authToken=${bootstrapToken}\n`);
-  npmEnv.NPM_CONFIG_USERCONFIG = npmrc;
 }
 const onNpm = capture(["npm", "view", `${name}@${current}`, "version"]);
 const bumped = !!onNpm;
@@ -196,28 +176,7 @@ const released = readPkg().version as string;
 
 step(`Publishing ${name}@${released}`);
 run(["bun", "run", "build"]);
-run(["npm", "publish", "--access", "public"], { env: npmEnv });
-
-const repo = process.env.GITHUB_REPOSITORY;
-let trustSetUp = false;
-if (bootstrapToken && repo) {
-  step("Setting up trusted publishing for the next releases");
-  trustSetUp = run(
-    [
-      "npm",
-      "trust",
-      "github",
-      name,
-      "--file",
-      "release.yml",
-      "--repo",
-      repo,
-      "--allow-publish",
-      "--yes",
-    ],
-    { env: npmEnv, optional: true }
-  );
-}
+run(["npm", "publish", "--access", "public"]);
 
 if (bumped) {
   step(`Committing ${released}`);
@@ -233,11 +192,4 @@ run(["git", "push", "origin", `HEAD:${branch}`, `v${released}`]);
 
 const url = `https://www.npmjs.com/package/${name}/v/${released}`;
 summary(`### 📦 Published \`${name}@${released}\`\n\n${url}`);
-if (bootstrapToken) {
-  summary(
-    trustSetUp
-      ? "Trusted publishing is set up. Now delete the NPM_TOKEN secret and the token on npmjs.com."
-      : `Set up the trusted publisher on npmjs.com (${name} > Settings > Trusted publisher: ${repo}, release.yml), then delete the NPM_TOKEN secret and the token.`
-  );
-}
 console.log(`\n✓ published ${name}@${released}`);

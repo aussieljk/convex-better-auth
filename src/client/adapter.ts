@@ -183,9 +183,11 @@ export const convexAdapter = <
 >(
   ctx: Ctx,
   api: {
-    // An app with a local install can leave deleteUserData out of its
-    // adapter exports. The adapter does not use it.
-    adapter: Omit<ComponentApi["adapter"], "deleteUserData">;
+    // An app with a local install can leave deleteUserData and incrementOne
+    // out of its adapter exports. The adapter does not use deleteUserData,
+    // and without incrementOne it uses the Better Auth fallback.
+    adapter: Omit<ComponentApi["adapter"], "deleteUserData" | "incrementOne"> &
+      Partial<Pick<ComponentApi["adapter"], "incrementOne">>;
   },
   config: {
     debugLogs?: DBAdapterDebugLogOption;
@@ -467,6 +469,44 @@ export const convexAdapter = <
           });
           return deleted ?? null;
         },
+        // Better Auth uses incrementOne for counters: two factor attempts,
+        // backup codes, organization limits, device authorization and the
+        // database rate limiter. The component incrementOne mutation reads,
+        // checks the where clause and writes in one transaction, so no
+        // increment is lost when requests run at the same time.
+        //
+        // Without this method, Better Auth reads the row, then writes it
+        // only if the fields did not change, and tries again at most five
+        // times. With many requests at the same time (a rate limit under
+        // load), it throws a contention error.
+        incrementOne: api.adapter.incrementOne
+          ? async (data): Promise<any> => {
+              if (!("runMutation" in ctx)) {
+                throw new Error("ctx is not a mutation ctx");
+              }
+              if (data.where.some((w) => w.connector === "OR")) {
+                throw new Error(
+                  "OR where clauses are not supported by incrementOne"
+                );
+              }
+              const onUpdateHandle =
+                config.authFunctions?.onUpdate &&
+                config.triggers?.[data.model]?.onUpdate
+                  ? ((await createFunctionHandle(
+                      config.authFunctions.onUpdate
+                    )) as FunctionHandle<"mutation">)
+                  : undefined;
+              return ctx.runMutation(api.adapter.incrementOne!, {
+                input: {
+                  model: data.model as TableNames,
+                  where: parseWhere(data.where),
+                  increment: data.increment,
+                  set: data.set as any,
+                },
+                onUpdateHandle: onUpdateHandle,
+              });
+            }
+          : undefined,
         deleteMany: async (data) => {
           if (!("runMutation" in ctx)) {
             throw new Error("ctx is not a mutation ctx");

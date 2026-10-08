@@ -8,6 +8,7 @@ export const {
   findMany,
   updateOne,
   updateMany,
+  incrementOne,
   deleteOne,
   deleteMany,
 } = createApi(schema, createAuthOptions);
