@@ -137,3 +137,20 @@ describe("incrementOne", () => {
     expect(result?.count).toBe(2);
   });
 });
+
+describe("create of a rateLimit row that is there", () => {
+  it("adds the count to the row and does not throw", async () => {
+    const { adapter } = setup();
+    const first = await createRateLimit(adapter, 1);
+    const second = await adapter.create<Record<string, unknown>, RateLimit>({
+      model: "rateLimit",
+      data: { key: "sign-in:1.2.3.4", count: 1, lastRequest: 7 },
+    });
+    expect(second).toMatchObject({ id: first.id, count: 2, lastRequest: 7 });
+    const rows = await adapter.findMany<RateLimit>({
+      model: "rateLimit",
+      where,
+    });
+    expect(rows).toHaveLength(1);
+  });
+});

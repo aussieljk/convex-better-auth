@@ -307,12 +307,14 @@ export const convex = (opts: {
           handler: createAuthMiddleware(async (ctx) => {
             // Set jwt cookie at login for authenticated ssr
             const originalSession = ctx.context.session;
+            // A failed sign-in has no session, so there is no token to set.
+            if (!ctx.context.session && !ctx.context.newSession) return;
             try {
               ctx.context.session =
                 ctx.context.session ?? ctx.context.newSession;
               const { token } = await jwt.endpoints.getToken({
                 ...ctx,
-                headers: {},
+                headers: new Headers(),
                 method: "GET",
                 asResponse: false,
                 returnHeaders: false,

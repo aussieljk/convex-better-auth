@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.14.2
+
+- fix(adapter): a create of a `rateLimit` row whose key is there adds the count
+  to that row. Before, two requests at the same time both created the row, and
+  the second threw "rateLimit key already exists".
+- fix(convex plugin): the after hook that sets the JWT cookie does nothing when
+  there is no session, and it gives `getToken` a real `Headers`. Before, a
+  failed sign-in logged "INTERNAL_SERVER_ERROR: e.headers?.get is not a
+  function".
+
 ## 0.14.1
 
 - fix(adapter): add a native `incrementOne`. The component `incrementOne`

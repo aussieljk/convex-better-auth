@@ -78,3 +78,43 @@ describe("convex plugin OpenID configuration", () => {
     );
   });
 });
+
+describe("convex plugin JWT cookie on a failed sign-in", () => {
+  it("gives 401 and logs no internal error for a wrong password", async () => {
+    process.env.CONVEX_SITE_URL = "https://example.convex.site";
+    const errors: unknown[] = [];
+    const auth = betterAuth({
+      baseURL: "https://example.convex.site",
+      secret: "test-secret-at-least-thirty-two-characters-long",
+      database: memoryAdapter({
+        user: [],
+        session: [],
+        account: [],
+        verification: [],
+        jwks: [],
+      }),
+      emailAndPassword: { enabled: true },
+      logger: {
+        log: (level, ...args) => {
+          if (level === "error") errors.push(args);
+        },
+      },
+      plugins: [convex({ authConfig })],
+    });
+    await auth.api.signUpEmail({
+      body: { email: "a@example.com", password: "right-password", name: "A" },
+    });
+    const response = await auth.handler(
+      new Request("https://example.convex.site/api/auth/sign-in/email", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: "a@example.com",
+          password: "wrong-password",
+        }),
+      })
+    );
+    expect(response.status).toBe(401);
+    expect(errors).toEqual([]);
+  });
+});

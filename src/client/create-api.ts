@@ -78,6 +78,30 @@ export const createApi = <Schema extends SchemaDefinition<any, any>>(
         onCreateHandle: v.optional(v.string()),
       },
       handler: async (ctx, args) => {
+        // The rate limiter finds the row for a key and creates it in two
+        // calls. When two requests come at the same time, both create it.
+        // Add the second count to the row that is there, and do not throw.
+        if (args.input.model === "rateLimit") {
+          const data = args.input.data as {
+            key: string;
+            count: number;
+            lastRequest: number;
+          };
+          const existing = await ctx.db
+            .query("rateLimit" as any)
+            .withIndex("key", (q: any) => q.eq("key", data.key))
+            .unique();
+          if (existing) {
+            await ctx.db.patch("rateLimit" as any, existing._id, {
+              count: existing.count + data.count,
+              lastRequest: Math.max(existing.lastRequest, data.lastRequest),
+            });
+            return selectFields(
+              await ctx.db.get("rateLimit" as any, existing._id),
+              args.select
+            );
+          }
+        }
         await checkUniqueFields(
           ctx,
           schema,
